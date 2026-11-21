@@ -143,7 +143,8 @@ deben salir de su perímetro, y la empresa exige acuerdo de confidencialidad.
 | Integrante | Rol propuesto |
 |---|---|
 | Luis Enrique Ruiz Restrepo | Analista de configuración e integración |
-| Zara Zapata Mariaca | Analista de eventos |
-| Maria Camila Garcia Castrillon | Responsable de activos |
-| Juan Daniel Herrera Munoz | Verificador |
-| Luis Alexander Ramirez Valencia | Relator |
+| Zara Zapata Mariaca | Verificador |
+| Maria Camila Garcia Castrillon | Relator |
+| Luis Alexander Ramirez Valencia | — |
+| Jhojan Steven Cano Florez | — |
+| Adyuer De Jesus Ojeda Badel | — |
