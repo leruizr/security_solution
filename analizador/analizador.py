@@ -66,6 +66,7 @@ def detectar(eventos, cfg):
             'tipo': tipo,
             'motivo': motivo,
             'disposicion': DISPOSICION_INICIAL,
+            'origen_regla': 'base',
         })
 
     for e in sorted(eventos, key=lambda x: (x['fecha_hora'], x['evento_id'])):
@@ -123,17 +124,101 @@ def detectar(eventos, cfg):
 
     return alertas
 
-# ---------------------------------------------------------------------------
-# PENDIENTE (MVP del equipo). Cada regla se agrega y se revalida por separado:
-#   [hecho] Enriquecer cada alerta con el inventario: activo, zona y criticidad.
-#   [hecho] Reconocer CH01 (cambios_autorizados.csv) para cerrar lo autorizado.
-#   [hecho] Escalar los "fallos seguidos de exito".
-#   [hecho] Calcular severidad = criticidad_activo x peso_senal (1-3 x 1-3).
-#   Pendiente: detectar denegaciones repetidas desde Internet a un activo critico
-#              (E0309-E0320, los 12 deny desde 203.0.113.77 hacia DB-LAB).
-#   Pendiente: alertar por uso de R02, la excepcion que no registra eventos.
-#   Al agregar cada regla, revalidar contra 07_Validacion/Referencia_alertas.csv.
-# ---------------------------------------------------------------------------
+def detectar_ampliadas(eventos, cfg, inventario, politicas, desde=0):
+    """Reglas que el analizador original del curso NO trae.
+
+    Van aparte de detectar() a proposito: asi las 4 reglas base siguen
+    reproduciendo byte a byte 07_Validacion/Referencia_alertas.csv, y la mejora
+    del equipo se puede mostrar y medir por separado. Los identificadores de las
+    alertas base no se mueven, lo que importa porque ya estan citados en el
+    expediente y en la Data Table de alertas notificadas.
+    """
+    alertas = []
+    por_ip = {a['ip_prueba']: a for a in inventario}
+    criticos = {a['ip_prueba'] for a in inventario if a['criticidad'] == 'Alta'}
+    sin_registro = {p['regla_id'] for p in politicas if p['registro'] == 'no'}
+
+    def alertar(evento, tipo, motivo):
+        alertas.append({
+            'evento_id': evento['evento_id'],
+            'fecha_hora': evento['fecha_hora'],
+            'tipo': tipo,
+            'motivo': motivo,
+            'disposicion': DISPOSICION_INICIAL,
+            'origen_regla': 'ampliada',
+        })
+
+    def nombre(ip):
+        activo = por_ip.get(ip)
+        return activo['nombre_prueba'] if activo else ip
+
+    ordenados = sorted(eventos, key=lambda x: (x['fecha_hora'], x['evento_id']))
+
+    # Regla 5: denegaciones repetidas desde fuera del inventario hacia un activo
+    # critico. El firewall las bloqueo, asi que no hubo acceso; pero el patron
+    # (muchos intentos, varios puertos, un solo origen) merece revision.
+    ventanas = defaultdict(deque)
+    puertos = defaultdict(set)
+    disparadas = {}
+    for e in ordenados:
+        if e['accion'] != 'deny':
+            continue
+        if e['origen_ip'] in por_ip:          # origen interno: no viene de Internet
+            continue
+        if e['destino_ip'] not in criticos:
+            continue
+
+        dt = datetime.fromisoformat(e['fecha_hora'])
+        clave = (e['origen_ip'], e['destino_ip'])
+        cola = ventanas[clave]
+        cola.append(dt)
+        puertos[clave].add(str(e['puerto_destino']))
+        while cola and dt - cola[0] > timedelta(minutes=cfg['ventana_minutos']):
+            cola.popleft()
+
+        previa = disparadas.get(clave)
+        fuera_de_cooldown = (
+            previa is None
+            or dt - previa > timedelta(minutes=cfg['ventana_minutos'])
+        )
+        if len(cola) >= cfg['fallos_umbral'] and fuera_de_cooldown:
+            lista = ', '.join(sorted(puertos[clave], key=int))
+            alertar(
+                e,
+                'Denegaciones repetidas',
+                f'{len(cola)} intentos bloqueados en ventana móvil desde '
+                f'{e["origen_ip"]}, que no está en el inventario, hacia '
+                f'{nombre(e["destino_ip"])}. Puertos probados: {lista}. '
+                f'El firewall los negó: no hubo acceso.',
+            )
+            disparadas[clave] = dt
+
+    # Regla 6: uso efectivo de una excepcion que la politica declara sin
+    # registro. Una sola alerta por regla, no una por evento: ocho avisos del
+    # mismo problema serian fatiga de alertas.
+    usos = defaultdict(list)
+    for e in ordenados:
+        if e['regla_id'] in sin_registro:
+            usos[e['regla_id']].append(e)
+
+    for regla_id in sorted(usos):
+        grupo = usos[regla_id]
+        destinos = ', '.join(sorted({nombre(g['destino_ip']) for g in grupo}))
+        politica = next((p for p in politicas if p['regla_id'] == regla_id), None)
+        observacion = politica['observacion'] if politica else ''
+        alertar(
+            grupo[0],
+            'Excepción sin registro',
+            f'{len(grupo)} eventos pasaron por {regla_id}, que la política '
+            f'declara sin registro ({observacion.lower()}). Destinos: {destinos}. '
+            f'Estos accesos no quedan en ninguna auditoría posterior.',
+        )
+
+    # Numeracion continua, despues de las base, en orden cronologico.
+    alertas.sort(key=lambda a: (a['fecha_hora'], a['evento_id']))
+    for i, a in enumerate(alertas):
+        a['alerta_id'] = f'AL{desde + i + 1:03}'
+    return alertas
 
 
 def cargar_csv(ruta):
@@ -147,8 +232,9 @@ def cargar_eventos(ruta):
 
 
 def escribir_csv(ruta, filas, campos):
+    """Escribe solo las columnas pedidas; ignora los campos de mas."""
     with ruta.open('w', encoding='utf-8-sig', newline='') as f:
-        escritor = csv.DictWriter(f, fieldnames=campos)
+        escritor = csv.DictWriter(f, fieldnames=campos, extrasaction='ignore')
         escritor.writeheader()
         escritor.writerows(filas)
 
@@ -165,7 +251,14 @@ def run(notificar=False, pruebas=False):
     inventario = cargar_csv(ENTRADA_INVENTARIO)
     cambios = cargar_csv(ENTRADA_CAMBIOS)
 
-    alertas = detectar(eventos, cfg)
+    politicas = cargar_csv(ENTRADA_POLITICAS)
+
+    # Las 4 reglas del curso primero, para que sus identificadores no cambien
+    # nunca; las 2 del equipo despues, numeradas a continuacion.
+    base = detectar(eventos, cfg)
+    ampliadas = detectar_ampliadas(eventos, cfg, inventario, politicas, desde=len(base))
+    alertas = base + ampliadas
+
     enriquecidas = severidad.enriquecer(alertas, eventos, inventario, cambios, cfg)
     criticas = severidad.criticas(enriquecidas)
 
@@ -179,17 +272,22 @@ def run(notificar=False, pruebas=False):
     resumen = {
         'eventos': len(eventos),
         'alertas': len(alertas),
+        'alertas_base': len(base),
+        'alertas_ampliadas': len(ampliadas),
         'por_tipo': dict(por_tipo),
         'nota': 'Datos de prueba. La cantidad de alertas no equivale a incidentes.',
     }
 
-    # El CSV conserva EXACTAMENTE las 6 columnas de la referencia del curso:
-    # el enriquecimiento viaja en el JSON, no aqui, para no romper la validacion.
-    escribir_csv(
-        SALIDAS / 'alertas.csv',
-        alertas,
-        ['alerta_id', 'evento_id', 'fecha_hora', 'tipo', 'motivo', 'disposicion'],
-    )
+    # Dos CSV distintos, a proposito:
+    #   alertas_base.csv  -> SOLO las 4 reglas del curso. Es el que se compara
+    #                        con 07_Validacion/Referencia_alertas.csv y tiene que
+    #                        salir identico, sin importar cuantas reglas agreguemos.
+    #   alertas.csv       -> el producto del equipo, con todas las reglas.
+    # Ambos conservan las 6 columnas del esquema del curso; el enriquecimiento
+    # (activo, severidad, correlacion) viaja en el JSON.
+    campos = ['alerta_id', 'evento_id', 'fecha_hora', 'tipo', 'motivo', 'disposicion']
+    escribir_csv(SALIDAS / 'alertas_base.csv', base, campos)
+    escribir_csv(SALIDAS / 'alertas.csv', alertas, campos)
     (SALIDAS / 'resumen.json').write_text(
         json.dumps(resumen, ensure_ascii=False, indent=2), encoding='utf-8'
     )
@@ -204,7 +302,7 @@ def run(notificar=False, pruebas=False):
         'inventario': inventario,
         'hallazgos': cargar_csv(ENTRADA_HALLAZGOS),
         'cambios_autorizados': cambios,
-        'politicas': cargar_csv(ENTRADA_POLITICAS),
+        'politicas': politicas,
         'servidores': json.loads(ENTRADA_SERVIDORES.read_text(encoding='utf-8')),
         'casos_controlados': json.loads(ENTRADA_CASOS.read_text(encoding='utf-8')),
         'resumen': resumen,
@@ -219,7 +317,8 @@ def run(notificar=False, pruebas=False):
     )
 
     print(json.dumps(resumen, ensure_ascii=False, indent=2))
-    print(f'\nEscrito: {SALIDAS / "alertas.csv"}')
+    print(f'\nEscrito: {SALIDAS / "alertas_base.csv"} (4 reglas del curso, {len(base)} alertas)')
+    print(f'Escrito: {SALIDAS / "alertas.csv"} ({len(alertas)} alertas en total)')
     print(f'Escrito: {SALIDAS / "resumen.json"}')
     print(f'Escrito: {WEB / "alertas.json"}')
 

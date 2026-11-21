@@ -18,6 +18,8 @@ export const PESO_SENAL = {
   'Fuera de horario': 1,
   'Volumen para revisión': 3,
   'Inconsistencia de registro': 2,
+  'Denegaciones repetidas': 2,
+  'Excepción sin registro': 2,
 };
 
 export const PESO_CRITICIDAD = { Alta: 3, Media: 2, Baja: 1 };
@@ -48,6 +50,7 @@ export function detectar(eventos, cfg) {
       tipo,
       motivo,
       disposicion: DISPOSICION_INICIAL,
+      origen_regla: 'base',
     });
   };
 
@@ -100,6 +103,104 @@ export function detectar(eventos, cfg) {
     }
   }
 
+  return alertas;
+}
+
+/* ------------------------------------------------------------------ */
+/* Reglas ampliadas: las que el analizador original del curso NO trae   */
+/*                                                                      */
+/* Van aparte para que las 4 base sigan reproduciendo la referencia del */
+/* curso sin que los identificadores se muevan al agregar reglas.       */
+/* ------------------------------------------------------------------ */
+export function detectarAmpliadas(eventos, cfg, inventario, politicas, desde) {
+  const inicio = desde || 0;
+  const alertas = [];
+  const porIp = new Map((inventario || []).map(a => [a.ip_prueba, a]));
+  const criticos = new Set((inventario || [])
+    .filter(a => a.criticidad === 'Alta').map(a => a.ip_prueba));
+  const sinRegistro = new Set((politicas || [])
+    .filter(p => p.registro === 'no').map(p => p.regla_id));
+
+  const agregar = (e, tipo, motivo) => {
+    alertas.push({
+      evento_id: e.evento_id,
+      fecha_hora: e.fecha_hora,
+      tipo,
+      motivo,
+      disposicion: DISPOSICION_INICIAL,
+      origen_regla: 'ampliada',
+    });
+  };
+
+  const nombre = ip => {
+    const a = porIp.get(ip);
+    return a ? a.nombre_prueba : ip;
+  };
+
+  const ordenados = eventos.slice().sort((a, b) => {
+    if (a.fecha_hora !== b.fecha_hora) return a.fecha_hora < b.fecha_hora ? -1 : 1;
+    return a.evento_id < b.evento_id ? -1 : a.evento_id > b.evento_id ? 1 : 0;
+  });
+
+  /* Regla 5: denegaciones repetidas desde fuera del inventario hacia un activo
+     critico. El firewall las bloqueo, asi que no hubo acceso; pero el patron
+     (muchos intentos, varios puertos, un solo origen) merece revision. */
+  const ventanas = new Map();
+  const puertos = new Map();
+  const disparadas = new Map();
+
+  for (const e of ordenados) {
+    if (e.accion !== 'deny') continue;
+    if (porIp.has(e.origen_ip)) continue;        // origen interno: no viene de Internet
+    if (!criticos.has(e.destino_ip)) continue;
+
+    const dt = aFecha(e.fecha_hora);
+    const clave = e.origen_ip + '|' + e.destino_ip;
+    if (!ventanas.has(clave)) { ventanas.set(clave, []); puertos.set(clave, new Set()); }
+    const cola = ventanas.get(clave);
+    cola.push(dt);
+    puertos.get(clave).add(String(e.puerto_destino));
+    while (cola.length && dt - cola[0] > cfg.ventana_minutos * MIN) cola.shift();
+
+    const previa = disparadas.get(clave);
+    const fueraDeCooldown = !previa || dt - previa > cfg.ventana_minutos * MIN;
+    if (cola.length >= cfg.fallos_umbral && fueraDeCooldown) {
+      const lista = [...puertos.get(clave)].sort((a, b) => a - b).join(', ');
+      agregar(e, 'Denegaciones repetidas',
+        `${cola.length} intentos bloqueados en ventana móvil desde ${e.origen_ip}, ` +
+        `que no está en el inventario, hacia ${nombre(e.destino_ip)}. ` +
+        `Puertos probados: ${lista}. El firewall los negó: no hubo acceso.`);
+      disparadas.set(clave, dt);
+    }
+  }
+
+  /* Regla 6: uso efectivo de una excepcion que la politica declara sin
+     registro. Una sola alerta por regla, no una por evento. */
+  const usos = new Map();
+  for (const e of ordenados) {
+    if (!sinRegistro.has(e.regla_id)) continue;
+    if (!usos.has(e.regla_id)) usos.set(e.regla_id, []);
+    usos.get(e.regla_id).push(e);
+  }
+
+  for (const reglaId of [...usos.keys()].sort()) {
+    const grupo = usos.get(reglaId);
+    const destinos = [...new Set(grupo.map(g => nombre(g.destino_ip)))].sort().join(', ');
+    const politica = (politicas || []).find(p => p.regla_id === reglaId);
+    const observacion = politica ? politica.observacion : '';
+    agregar(grupo[0], 'Excepción sin registro',
+      `${grupo.length} eventos pasaron por ${reglaId}, que la política declara ` +
+      `sin registro (${observacion.toLowerCase()}). Destinos: ${destinos}. ` +
+      `Estos accesos no quedan en ninguna auditoría posterior.`);
+  }
+
+  alertas.sort((a, b) => {
+    if (a.fecha_hora !== b.fecha_hora) return a.fecha_hora < b.fecha_hora ? -1 : 1;
+    return a.evento_id < b.evento_id ? -1 : a.evento_id > b.evento_id ? 1 : 0;
+  });
+  alertas.forEach((a, i) => {
+    a.alerta_id = 'AL' + String(inicio + i + 1).padStart(3, '0');
+  });
   return alertas;
 }
 
@@ -220,8 +321,13 @@ export function enriquecer(alertas, eventos, datos) {
   });
 }
 
-/* Pipeline completo: detectar + enriquecer. */
+/* Pipeline completo: las 4 reglas del curso, luego las 2 del equipo, luego el
+   enriquecimiento. El orden importa: asi los identificadores de las alertas
+   base nunca se mueven. */
 export function analizar(eventos, datos) {
   const cfg = datos.parametros || {};
-  return enriquecer(detectar(eventos, cfg), eventos, datos);
+  const base = detectar(eventos, cfg);
+  const ampliadas = detectarAmpliadas(
+    eventos, cfg, datos.inventario, datos.politicas, base.length);
+  return enriquecer(base.concat(ampliadas), eventos, datos);
 }

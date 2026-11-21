@@ -1,11 +1,15 @@
 {
   "eventos": 324,
-  "alertas": 6,
+  "alertas": 8,
+  "alertas_base": 6,
+  "alertas_ampliadas": 2,
   "por_tipo": {
     "Fuera de horario": 3,
     "Volumen para revisión": 1,
     "Inconsistencia de registro": 1,
-    "Fallos repetidos": 1
+    "Fallos repetidos": 1,
+    "Excepción sin registro": 1,
+    "Denegaciones repetidas": 1
   },
   "nota": "Datos de prueba. La cantidad de alertas no equivale a incidentes."
 }

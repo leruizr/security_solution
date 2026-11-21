@@ -16,6 +16,8 @@ PESO_SENAL = {
     'Fuera de horario': 1,
     'Volumen para revisión': 3,
     'Inconsistencia de registro': 2,
+    'Denegaciones repetidas': 2,
+    'Excepción sin registro': 2,
 }
 
 PESO_CRITICIDAD = {'Alta': 3, 'Media': 2, 'Baja': 1}

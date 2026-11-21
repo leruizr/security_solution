@@ -83,7 +83,7 @@ originales siguen reproduciendo la referencia del curso:
 
 ```bash
 python3 analizador/analizador.py
-diff salidas/alertas.csv Kenworth_Recursos_de_Prueba/07_Validacion/Referencia_alertas.csv
+diff salidas/alertas_base.csv Kenworth_Recursos_de_Prueba/07_Validacion/Referencia_alertas.csv
 ```
 
 Debe salir sin diferencias. Las reglas nuevas se agregan **una por una**,
@@ -115,15 +115,24 @@ Corte: **9 = crítica** (dispara correo), 6 = alta, 3–4 = media, 1–2 = baja.
 CH01 cubre BACKUP-LAB el 2026-11-20 de 02:00 a 02:30 desde 10.60.0.20, y
 **no autoriza envío externo de datos**.
 
-## Reglas pendientes de implementar
+## Las reglas, y por qué están separadas
 
-Están listadas como TODO numerado en `analizador/analizador.py`. En orden:
-enriquecer con inventario, reconocer CH01, correlacionar «fallos seguidos de
-éxito», detectar denegaciones repetidas desde Internet, alertar por uso de R02 y
-calcular severidad.
+`detectar()` tiene las 4 reglas del curso. `detectar_ampliadas()` tiene las 2 del
+equipo: denegaciones repetidas desde fuera del inventario hacia un activo
+crítico, y uso de una excepción que la política declara sin registro.
 
-Dato útil: los 12 eventos `deny` de `203.0.113.77` hacia DB-LAB (E0309–E0320) **no
-los detecta** el analizador original. Es la mejora más visible del MVP.
+**Están en funciones distintas a propósito.** Las base se numeran primero
+(`AL001`–`AL006`) y las ampliadas a continuación, de modo que agregar una regla
+nueva nunca desplaza un identificador existente. Eso importa por dos razones: los
+`AL00x` están citados en el expediente del equipo, y la Data Table de n8n guarda
+los identificadores ya notificados — si se movieran, se reenviarían correos.
+
+`salidas/alertas_base.csv` sale de las 4 base y es el que se compara con la
+referencia del curso. `salidas/alertas.csv` es el producto completo.
+
+Al agregar otra regla: va en `detectar_ampliadas()` (y en su espejo
+`detectarAmpliadas` de `web/js/motor.js`), con su peso en `PESO_SENAL` de ambos
+motores, y se revalida.
 
 ## Notificación (n8n)
 

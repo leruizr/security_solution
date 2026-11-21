@@ -27,7 +27,10 @@ alertas explicadas, separando las que ya tienen una explicación autorizada de l
 que requieren revisión real.
 
 ## Qué hace
-1. Aplica cuatro reglas de detección sobre los eventos normalizados.
+1. Aplica seis reglas de detección sobre los eventos normalizados: las cuatro
+   del analizador de referencia más dos que agregó el equipo (denegaciones
+   repetidas desde Internet hacia un activo crítico, y uso de una excepción del
+   firewall que no deja registro).
 2. Cruza cada alerta contra el inventario de activos y los cambios autorizados.
 3. Calcula severidad como criticidad del activo × peso de la señal.
 4. Prioriza los hallazgos con impacto × exposición y propone fichas de hardening
@@ -52,7 +55,8 @@ abiertas, de las cuales ${criticas.length} son críticas.
 - Trabaja sobre un solo día de datos: no establece una línea base ni una tendencia.
 
 ## Cómo se comprueba
-- El motor reproduce sin diferencias las 6 alertas de referencia del curso.
+- Las cuatro reglas de referencia reproducen sin diferencias las 6 alertas del
+  curso, aunque el equipo haya agregado dos reglas más.
 - Los 4 casos controlados pasan: 4 fallos sin alerta, 5 fallos con alerta,
   5 fallos dispersos sin alerta y frontera de 10 minutos inclusive.
 - El motor del navegador y el de Python producen el mismo resultado.

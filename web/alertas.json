@@ -1,5 +1,5 @@
 {
-  "generado_en": "2026-11-21T10:37:03",
+  "generado_en": "2026-11-21T10:46:45",
   "origen_datos": "Kenworth_Recursos_de_Prueba (datos de prueba del curso)",
   "parametros": {
     "fallos_umbral": 5,
@@ -293,12 +293,16 @@
   ],
   "resumen": {
     "eventos": 324,
-    "alertas": 6,
+    "alertas": 8,
+    "alertas_base": 6,
+    "alertas_ampliadas": 2,
     "por_tipo": {
       "Fuera de horario": 3,
       "Volumen para revisión": 1,
       "Inconsistencia de registro": 1,
-      "Fallos repetidos": 1
+      "Fallos repetidos": 1,
+      "Excepción sin registro": 1,
+      "Denegaciones repetidas": 1
     },
     "nota": "Datos de prueba. La cantidad de alertas no equivale a incidentes."
   },
@@ -310,6 +314,7 @@
       "tipo": "Fuera de horario",
       "motivo": "Acceso exitoso fuera de horario de prueba; revisar cambios autorizados",
       "disposicion": "Revisar contexto; no confirma incidente",
+      "origen_regla": "base",
       "activo": "BACKUP-LAB",
       "zona": "Respaldo",
       "criticidad": "Alta",
@@ -330,6 +335,7 @@
       "tipo": "Fuera de horario",
       "motivo": "Acceso exitoso fuera de horario de prueba; revisar cambios autorizados",
       "disposicion": "Revisar contexto; no confirma incidente",
+      "origen_regla": "base",
       "activo": "BACKUP-LAB",
       "zona": "Respaldo",
       "criticidad": "Alta",
@@ -350,6 +356,7 @@
       "tipo": "Fuera de horario",
       "motivo": "Acceso exitoso fuera de horario de prueba; revisar cambios autorizados",
       "disposicion": "Revisar contexto; no confirma incidente",
+      "origen_regla": "base",
       "activo": "BACKUP-LAB",
       "zona": "Respaldo",
       "criticidad": "Alta",
@@ -370,6 +377,7 @@
       "tipo": "Volumen para revisión",
       "motivo": "Volumen supera el umbral de prueba; no confirma extracción de información",
       "disposicion": "Revisar contexto; no confirma incidente",
+      "origen_regla": "base",
       "activo": "BACKUP-LAB",
       "zona": "Respaldo",
       "criticidad": "Alta",
@@ -393,6 +401,7 @@
       "tipo": "Inconsistencia de registro",
       "motivo": "Destino, servicio o acción no coinciden con la descripción simplificada de R01",
       "disposicion": "Revisar contexto; no confirma incidente",
+      "origen_regla": "base",
       "activo": "BACKUP-LAB",
       "zona": "Respaldo",
       "criticidad": "Alta",
@@ -415,6 +424,7 @@
       "tipo": "Fallos repetidos",
       "motivo": "5 fallos en ventana móvil; origen, destino y usuario coincidentes",
       "disposicion": "Revisar contexto; no confirma incidente",
+      "origen_regla": "base",
       "activo": "DB-LAB",
       "zona": "Servidores",
       "criticidad": "Alta",
@@ -429,6 +439,48 @@
       "notas": [
         "Los fallos son seguidos de un acceso exitoso desde el mismo origen y usuario."
       ]
+    },
+    {
+      "evento_id": "E0301",
+      "fecha_hora": "2026-11-20T09:00:00",
+      "tipo": "Excepción sin registro",
+      "motivo": "8 eventos pasaron por R02, que la política declara sin registro (excepción de prueba sin fecha de revisión). Destinos: DB-LAB. Estos accesos no quedan en ninguna auditoría posterior.",
+      "disposicion": "Revisar contexto; no confirma incidente",
+      "origen_regla": "ampliada",
+      "alerta_id": "AL007",
+      "activo": "DB-LAB",
+      "zona": "Servidores",
+      "criticidad": "Alta",
+      "peso_senal": 2,
+      "severidad": 6,
+      "severidad_etiqueta": "Alta",
+      "estado": "Abierta",
+      "justificacion": "Sin cambio autorizado que la explique.",
+      "cambio_id": null,
+      "destino_externo": false,
+      "seguido_de_exito": false,
+      "notas": []
+    },
+    {
+      "evento_id": "E0313",
+      "fecha_hora": "2026-11-20T10:04:00",
+      "tipo": "Denegaciones repetidas",
+      "motivo": "5 intentos bloqueados en ventana móvil desde 203.0.113.77, que no está en el inventario, hacia DB-LAB. Puertos probados: 22, 5432. El firewall los negó: no hubo acceso.",
+      "disposicion": "Revisar contexto; no confirma incidente",
+      "origen_regla": "ampliada",
+      "alerta_id": "AL008",
+      "activo": "DB-LAB",
+      "zona": "Servidores",
+      "criticidad": "Alta",
+      "peso_senal": 2,
+      "severidad": 6,
+      "severidad_etiqueta": "Alta",
+      "estado": "Abierta",
+      "justificacion": "Sin cambio autorizado que la explique.",
+      "cambio_id": null,
+      "destino_externo": false,
+      "seguido_de_exito": false,
+      "notas": []
     }
   ],
   "eventos": [

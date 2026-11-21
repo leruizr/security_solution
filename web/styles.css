@@ -376,3 +376,5 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   .hero-cifra{font-size:2.6rem}
   .kpis-linea{gap:18px}
 }
+.t-denegaciones{color:var(--aviso)}
+.t-excepcion{color:var(--aviso)}

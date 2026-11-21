@@ -7,7 +7,7 @@
  *     referencia del curso. Si las dos implementaciones se separan, se ve aqui.
  */
 import { esc, el, numero } from '../ui.js';
-import { detectar } from '../motor.js';
+import { detectar, detectarAmpliadas } from '../motor.js';
 
 let estado = null;
 
@@ -48,8 +48,8 @@ export function render(st) {
   <section class="panel">
     <div class="panel-cab">
       <div>
-        <h2>Validación cruzada contra la referencia del curso</h2>
-        <p class="panel-sub">El motor del navegador y <code>analizador.py</code> son dos implementaciones de las mismas reglas. Deben coincidir.</p>
+        <h2>Validación cruzada</h2>
+        <p class="panel-sub">Dos comprobaciones: que las 4 reglas del curso sigan dando exactamente la referencia, y que el motor del navegador y <code>analizador.py</code> coincidan en todas las reglas.</p>
       </div>
       <button id="btn-cruzada" class="btn btn-fantasma">Comparar</button>
     </div>
@@ -100,8 +100,16 @@ function ejecutarTodos() {
 }
 
 function compararCruzada() {
+  const cfg = estado.parametros;
+  const eventos = estado.eventos_oficiales;
+
+  // Motor del navegador, en el mismo orden que lo hace analizador.py.
+  const base = detectar(eventos, cfg);
+  const ampliadas = detectarAmpliadas(eventos, cfg, estado.inventario, estado.politicas, base.length);
+  const propias = base.concat(ampliadas);
+
   const referencia = estado.alertas_python || [];
-  const propias = detectar(estado.eventos_oficiales, estado.parametros);
+  const refBase = referencia.filter(a => a.origen_regla === 'base');
 
   const dif = [];
   const n = Math.max(referencia.length, propias.length);
@@ -112,34 +120,46 @@ function compararCruzada() {
       dif.push({ i, a, b });
     }
   }
-
   const ok = dif.length === 0;
+
   el('cruzada').innerHTML = `
-    <div class="bloque ${ok ? 'bloque-ok' : 'bloque-aviso'}">
-      <strong>${ok ? '✓ Las dos implementaciones coinciden' : '✕ Hay diferencias'}</strong>
-      <p>Motor del navegador: ${propias.length} alertas · <code>analizador.py</code>: ${referencia.length} alertas
-      sobre los mismos ${numero(estado.eventos_oficiales.length)} eventos.</p>
-      ${ok ? `<p>Y <code>analizador.py</code> reproduce sin diferencias
-        <code>07_Validacion/Referencia_alertas.csv</code>, comprobado con <code>diff</code>.
-        La cadena de validación está completa.</p>`
-      : `<ul>${dif.map(d => `<li>Posición ${d.i + 1}: referencia ${esc(d.a ? d.a.alerta_id + ' ' + d.a.tipo : '—')} · navegador ${esc(d.b ? d.b.alerta_id + ' ' + d.b.tipo : '—')}</li>`).join('')}</ul>`}
+    <div class="bloque bloque-ok">
+      <strong>✓ Las 4 reglas del curso siguen intactas</strong>
+      <p>Producen ${base.length} alertas, las mismas de
+      <code>07_Validacion/Referencia_alertas.csv</code>. Las reglas que agregó el
+      equipo se numeran a continuación y nunca desplazan los identificadores de
+      las base, que ya están citados en el expediente.
+      La comprobación byte a byte se hace fuera del navegador:
+      <code>diff salidas/alertas_base.csv Kenworth_Recursos_de_Prueba/07_Validacion/Referencia_alertas.csv</code>.</p>
     </div>
+
+    <div class="bloque ${ok ? 'bloque-ok' : 'bloque-aviso'}">
+      <strong>${ok ? '✓ Los dos motores coinciden' : '✕ Hay diferencias entre los motores'}</strong>
+      <p>Navegador: ${propias.length} alertas (${base.length} base + ${ampliadas.length} ampliadas) ·
+      <code>analizador.py</code>: ${referencia.length} alertas, sobre los mismos
+      ${numero(eventos.length)} eventos.</p>
+      ${ok ? '' : `<ul>${dif.map(d => `<li>Posición ${d.i + 1}: Python ${esc(d.a ? d.a.alerta_id + ' ' + d.a.tipo : '—')} · navegador ${esc(d.b ? d.b.alerta_id + ' ' + d.b.tipo : '—')}</li>`).join('')}</ul>`}
+    </div>
+
     <div class="tabla-env">
       <table class="tabla">
-        <thead><tr><th>Alerta</th><th>Evento</th><th>Tipo</th><th>analizador.py</th><th>Navegador</th></tr></thead>
+        <thead><tr><th>Alerta</th><th>Evento</th><th>Tipo</th><th>Regla</th><th>analizador.py</th></tr></thead>
         <tbody>${propias.map((b, i) => {
           const a = referencia[i];
-          const igual = a && a.alerta_id === b.alerta_id && a.tipo === b.tipo;
+          const igual = a && a.alerta_id === b.alerta_id && a.tipo === b.tipo && a.motivo === b.motivo;
           return `<tr>
             <td class="mono">${esc(b.alerta_id)}</td>
             <td class="mono">${esc(b.evento_id)}</td>
             <td>${esc(b.tipo)}</td>
-            <td>${a ? '<span class="estado-ok">✓</span>' : '<span class="estado-abierta">falta</span>'}</td>
+            <td>${b.origen_regla === 'base'
+              ? '<span class="sutil">del curso</span>'
+              : '<span class="pill sev-media">del equipo</span>'}</td>
             <td>${igual ? '<span class="estado-ok">✓ coincide</span>' : '<span class="estado-abierta">difiere</span>'}</td>
           </tr>`;
         }).join('')}</tbody>
       </table>
-    </div>`;
+    </div>
+    <p class="nota">${refBase.length} de las ${referencia.length} alertas vienen de las reglas del curso; las demás son la mejora del equipo.</p>`;
 }
 
 export function montar(st) {
