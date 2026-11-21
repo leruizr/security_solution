@@ -1,0 +1,15 @@
+INTERNET (etiquetas de documentación)
+             |
+          FW-LAB ---- DMZ: WEB-LAB
+             |
+             +--- SERVIDORES: APP-LAB --- DB-LAB
+             +--- RESPALDO: BACKUP-LAB
+             +--- USUARIOS: PC-LAB-01 / PC-LAB-02
+             +--- GESTIÓN: ADMIN-LAB / LOG-LAB
+             +--- PRUEBAS: TEST-LAB
+
+Flujos deseados de práctica: Internet -> WEB-LAB TCP/443;
+WEB-LAB -> APP-LAB TCP/8443; APP-LAB -> DB-LAB TCP/5432;
+ADMIN-LAB -> servidores para administración autorizada;
+activos -> LOG-LAB para registros; servidor de respaldo según autorización.
+El diagrama no confirma permisos efectivos: contrastar reglas y eventos.

@@ -1,0 +1,26 @@
+{
+  "DB-LAB": {
+    "mfa_administracion": false,
+    "actualizaciones_pendientes": 3,
+    "registro_centralizado": false,
+    "cuentas_compartidas": true,
+    "respaldo_ultima_prueba": "No registrada",
+    "administracion_restringida": false
+  },
+  "APP-LAB": {
+    "mfa_administracion": true,
+    "actualizaciones_pendientes": 1,
+    "registro_centralizado": true,
+    "cuentas_compartidas": false,
+    "respaldo_ultima_prueba": "2026-11-10",
+    "administracion_restringida": true
+  },
+  "BACKUP-LAB": {
+    "mfa_administracion": false,
+    "actualizaciones_pendientes": 0,
+    "registro_centralizado": true,
+    "cuentas_compartidas": false,
+    "respaldo_ultima_prueba": "No registrada",
+    "administracion_restringida": true
+  }
+}

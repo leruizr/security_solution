@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitoreo de eventos | Kenworth (datos de prueba)</title>
+<meta name="description" content="Tablero de clasificación de alertas de seguridad. Ejercicio académico con datos de prueba.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="cabecera">
+  <div class="cabecera-texto">
+    <h1>Monitoreo de eventos y alertas</h1>
+    <p class="sub">Kenworth de la Montaña · Equipo E-8ZNU «security» · EstudIA Capa 2</p>
+  </div>
+  <span class="badge-prueba" title="Los datos no representan la infraestructura real de Kenworth">
+    DATOS DE PRUEBA
+  </span>
+</header>
+
+<main>
+  <section id="estado" class="aviso oculto"></section>
+
+  <section class="tarjetas" id="tarjetas"></section>
+
+  <section class="panel">
+    <div class="panel-cabecera">
+      <h2>Alertas</h2>
+      <div class="filtros">
+        <label for="f-tipo" class="sr-only">Filtrar por tipo</label>
+        <select id="f-tipo"><option value="">Todos los tipos</option></select>
+        <label for="f-texto" class="sr-only">Buscar</label>
+        <input id="f-texto" type="search" placeholder="Buscar evento, motivo…" autocomplete="off">
+      </div>
+    </div>
+    <div class="tabla-envoltura">
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>Alerta</th><th>Fecha y hora</th><th>Tipo</th><th>Motivo</th><th>Evidencia</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="nota" id="nota-conteo"></p>
+  </section>
+
+  <section class="panel">
+    <h2>Límites de este tablero</h2>
+    <ul class="limites">
+      <li>Una alerta es una <strong>señal para revisión</strong>, no un incidente confirmado.</li>
+      <li>No prueba intrusión, atribución de un atacante ni extracción de información.</li>
+      <li>Las actualizaciones pendientes no permiten inferir vulnerabilidades concretas (CVE).</li>
+      <li>Un solo día de datos y sin User-ID: no se puede asociar una IP a una persona.</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <p>Generado por <code>analizador/analizador.py</code> · <span id="generado">—</span></p>
+  <p class="nota">Ejercicio académico. Ningún dato corresponde a la infraestructura real de Kenworth.</p>
+</footer>
+
+<dialog id="detalle">
+  <div class="detalle-cabecera">
+    <h3 id="detalle-titulo">Evidencia</h3>
+    <button id="cerrar" aria-label="Cerrar">✕</button>
+  </div>
+  <div id="detalle-cuerpo"></div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

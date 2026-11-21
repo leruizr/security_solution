@@ -1,0 +1,5 @@
+﻿regla_id,origen,destino,servicio,accion,registro,observacion
+R01,Internet,WEB-LAB,TCP/443,allow,si,Acceso web previsto
+R02,Usuarios,DB-LAB,any,allow,no,Excepción de prueba sin fecha de revisión
+R03,ADMIN-LAB,Servidores,"TCP/22,TCP/3389",allow,si,Administración de prueba
+R04,any,any,any,deny,si,Cierre por defecto

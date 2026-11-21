@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+._*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secretos y configuracion local  --  NO BORRAR ESTAS LINEAS
+# La URL del webhook de n8n es un endpoint abierto: cualquiera con ella
+# puede disparar correos. Solo se versiona el archivo .ejemplo.json
+config/notificaciones.json
+.env
+.env.local
+
+# Estado local del notificador (evita reenviar los mismos correos)
+salidas/.enviadas.json
+
+# Vercel
+.vercel/
+
+# Node (por si mas adelante se usa un bundler)
+node_modules/
+dist/
+
+# ---------------------------------------------------------------------------
+# NO PUBLICAR: contienen informacion REAL, no datos de prueba.
+# Este repositorio es publico. Estos dos archivos describen la infraestructura
+# real de Kenworth (firewall, antivirus, ERP, antecedente de ransomware), nombran
+# a un empleado real de la empresa y detallan el laboratorio del equipo.
+# Se conservan en disco para trabajar en local; simplemente no se versionan.
+# ---------------------------------------------------------------------------
+Kenworth_Recursos_de_Prueba/CONTEXTO_PROYECTO.md
+Kenworth_Recursos_de_Prueba/01_Contexto/Ficha_original_del_reto.pdf

@@ -1,0 +1,8 @@
+{
+  "fallos_umbral": 5,
+  "ventana_minutos": 10,
+  "hora_inicio": 7,
+  "hora_fin": 19,
+  "volumen_revision_bytes": 50000000,
+  "nota": "Reglas didácticas; no indican un ataque por sí solas."
+}

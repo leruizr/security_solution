@@ -1,0 +1,11 @@
+﻿activo_id,nombre_prueba,ip_prueba,zona,criticidad,responsable_rol,proposito
+A01,FW-LAB,10.60.0.1,Gestión,Alta,Redes,Filtrar tráfico entre zonas
+A02,WEB-LAB,10.60.10.10,DMZ,Alta,Aplicaciones,Portal web de prueba
+A03,APP-LAB,10.60.20.10,Servidores,Alta,Aplicaciones,Servicio operativo de prueba
+A04,DB-LAB,10.60.20.20,Servidores,Alta,Datos,Base operativa de prueba
+A05,BACKUP-LAB,10.60.30.10,Respaldo,Alta,Infraestructura,Copias de seguridad
+A06,ADMIN-LAB,10.60.0.20,Gestión,Alta,Infraestructura,Administración autorizada
+A07,PC-LAB-01,10.60.40.21,Usuarios,Media,Soporte,Puesto de trabajo
+A08,PC-LAB-02,10.60.40.22,Usuarios,Media,Soporte,Puesto de trabajo
+A09,LOG-LAB,10.60.0.30,Gestión,Alta,Seguridad,Concentrar registros
+A10,TEST-LAB,10.60.50.10,Pruebas,Baja,Laboratorio,Pruebas controladas

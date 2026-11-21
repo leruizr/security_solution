@@ -1,0 +1,49 @@
+[
+  {
+    "caso": "Cuatro fallos",
+    "minutos": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "alertas_esperadas": 0,
+    "alertas_observadas": 0
+  },
+  {
+    "caso": "Cinco fallos",
+    "minutos": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "alertas_esperadas": 1,
+    "alertas_observadas": 1
+  },
+  {
+    "caso": "Fuera de ventana",
+    "minutos": [
+      0,
+      3,
+      6,
+      9,
+      12
+    ],
+    "alertas_esperadas": 0,
+    "alertas_observadas": 0
+  },
+  {
+    "caso": "Frontera diez minutos",
+    "minutos": [
+      0,
+      2,
+      4,
+      6,
+      10
+    ],
+    "alertas_esperadas": 1,
+    "alertas_observadas": 1
+  }
+]

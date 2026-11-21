@@ -1,0 +1,15 @@
+{
+  "_lea_esto": [
+    "Copie este archivo como config/notificaciones.json y ponga ahi la URL real.",
+    "config/notificaciones.json esta en .gitignore y NO debe subirse al repositorio:",
+    "un webhook de n8n es un endpoint abierto y cualquiera con la URL puede",
+    "disparar correos en nombre del equipo.",
+    "El envio es OPCIONAL: el analizador funciona igual sin internet."
+  ],
+  "activo": false,
+  "webhook_url": "https://PONGA-AQUI-SU-INSTANCIA.n8n.cloud/webhook/alertas-kenworth",
+  "severidad_minima": 9,
+  "asunto_prefijo": "[DATOS DE PRUEBA - EstudIA]",
+  "destinatarios": ["correo-del-equipo@ejemplo.com"],
+  "nota": "severidad_minima 9 = solo alertas criticas. Evita fatiga de alertas."
+}

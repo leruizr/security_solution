@@ -1,0 +1,8 @@
+﻿hallazgo_id,activo,categoria,evidencia,impacto_prueba,confianza,estado
+H01,DB-LAB,Acceso amplio,R02 permite Usuarios -> DB-LAB any sin registro,Alto,Requiere revisión,Pendiente
+H02,DB-LAB,Administración,Configuración indica MFA desactivado y cuentas compartidas,Alto,Requiere revisión,Pendiente
+H03,DB-LAB,Trazabilidad,Configuración indica registro centralizado desactivado,Alto,Requiere revisión,Pendiente
+H04,DB-LAB,Actualizaciones,"Se reportan 3 actualizaciones pendientes, sin versiones ni CVE",Por precisar,Requiere revisión,Pendiente
+H05,BACKUP-LAB,Recuperación,Última prueba de restauración no registrada,Alto,Requiere revisión,Pendiente
+H06,APP-LAB,Actualizaciones,Se reporta 1 actualización pendiente sin detalle,Por precisar,Requiere revisión,Pendiente
+H07,BACKUP-LAB,Administración,MFA desactivado,Medio,Requiere revisión,Pendiente
