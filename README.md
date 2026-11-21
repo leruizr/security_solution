@@ -3,6 +3,8 @@
 Reto **EstudIA** (Alcaldía de Medellín) · Capa 2 · Ciberseguridad básico
 Equipo **E-8ZNU «security»** · Bloque 27, salón 303
 
+**Tablero en vivo: <https://securitysolution-bay.vercel.app/>**
+
 > **Todos los datos de este repositorio son de prueba.** No representan la
 > infraestructura, los registros, las políticas ni las vulnerabilidades reales de
 > Kenworth de la Montaña. El ejercicio se trabaja **100 % offline**: solo se leen
@@ -17,12 +19,15 @@ para cualquier plan de hardening.
 
 ## La solución propuesta
 
-**Kenworth CyberGuard · SOC-Lite**, en tres capas sobre una única fuente de verdad:
+**LOG-SECURITY**, en tres capas sobre una única fuente de verdad:
 
 1. **Motor de análisis** (`analizador/`) — normaliza los eventos y los correlaciona
    contra el inventario de activos, las políticas del firewall y los cambios
    autorizados. Clasifica cada alerta por severidad.
-2. **Tablero** (`web/`) — cinco vistas, sin dependencias externas:
+2. **Tablero** (`web/`) — seis vistas, sin dependencias externas:
+   - **Panorama** — las métricas del conjunto de un vistazo: actividad por hora,
+     alertas por severidad, tráfico por regla del firewall, volumen por destino y
+     el estado de configuración de cada servidor.
    - **Monitor** — KPIs, tabla de alertas y de eventos crudos, filtros en vivo, e
      ingesta de logs propios por arrastrar y soltar.
    - **Correlación** — cruza las alertas contra los cambios autorizados y muestra
@@ -33,8 +38,10 @@ para cualquier plan de hardening.
      motor del navegador y el de Python.
    - **Entregables** — Canvas, ficha de incidente y guion de pitch, generados a
      partir de los datos cargados.
-3. **Notificación automática** (`n8n/`) — envía correo únicamente cuando aparece una
-   alerta crítica, para no generar fatiga de alertas.
+3. **Notificación automática** (`n8n/`) — envía un solo correo cuando aparecen
+   alertas críticas, nunca uno por alerta. Lo ya notificado se registra en una
+   Data Table de n8n compartida por el equipo, así que una alerta no se avisa
+   dos veces aunque el analizador corra muchas veces o desde otro computador.
 
 ### Severidad
 
@@ -42,6 +49,16 @@ para cualquier plan de hardening.
 que la rúbrica usa para impacto × exposición. 9 es crítica, 6 alta, 3–4 media,
 1–2 baja. Una alerta cubierta por un cambio autorizado se descarta con
 justificación trazable, no se borra.
+
+### Visualización
+
+Los gráficos usan **una sola serie por gráfico en un único tono azul**
+(`#3987e5`), validado sobre la superficie oscura del tablero: banda de
+luminosidad, croma y contraste 4.98:1. Los colores de estado (crítico,
+advertencia, correcto) son los reservados y **nunca van solos**: siempre con
+icono y texto, porque rojo y verde se confunden con daltonismo. Todo valor se
+puede leer como número, no solo como tamaño de barra, y la actividad por hora
+trae su tabla equivalente.
 
 ### Decisiones técnicas
 
@@ -54,7 +71,13 @@ justificación trazable, no se borra.
 - **Dos motores, una verdad.** Las reglas están en Python y en JavaScript. La vista
   de Validación comprueba en vivo que producen el mismo resultado.
 
-## Cómo ejecutarlo
+## Cómo usarlo
+
+El tablero está publicado en <https://securitysolution-bay.vercel.app/>. No hay
+que instalar nada para verlo: se abre en cualquier navegador y trae cargado el
+conjunto de prueba.
+
+### Regenerar los datos (solo para desarrollo)
 
 ```bash
 python3 analizador/analizador.py
@@ -70,15 +93,16 @@ Genera:
 | `salidas/resumen.json` | Conteos por tipo |
 | `web/alertas.json` | **El contrato de datos** que consume el tablero |
 
-Para ver el tablero en local:
+Para trabajar en el tablero sin publicar, se levanta un servidor local:
 
 ```bash
 cd web && python3 -m http.server 8000
 ```
 
-Y abrir <http://localhost:8000>. Abrirlo con doble clic **no funciona**: el
-navegador bloquea la lectura de módulos y de `alertas.json` bajo el protocolo
-`file://`.
+Y se abre <http://localhost:8000>. Esto es **solo para desarrollo**: la versión
+que ve el equipo y el jurado es la de Vercel. Abrir el archivo con doble clic
+**no funciona**, porque el navegador bloquea la lectura de módulos y de
+`alertas.json` bajo el protocolo `file://`.
 
 > Si editas un archivo de `web/js/` y el navegador no refleja el cambio, es la
 > caché de módulos: recarga con **Cmd+Shift+R**.
@@ -102,6 +126,8 @@ Sin diferencias = la extracción del código no alteró la lógica de detección
 │   ├── js/motor.js        Reglas de detección y severidad (espejo del de Python)
 │   ├── js/ingesta.js      Lectura de CSV / JSON / JSONL en el navegador
 │   └── js/vistas/         Una vista por módulo
+├── analizador/severidad.py    Severidad y correlación (espejo del de JavaScript)
+├── analizador/notificador.py  Envío opcional al webhook de n8n
 ├── salidas/           Resultados de cada corrida
 ├── docs/              Plantillas del curso que el equipo diligencia
 ├── config/            Configuración local. El archivo real no se versiona
@@ -117,10 +143,31 @@ Sin diferencias = la extracción del código no alteró la lógica de detección
 > El documento de contexto del proyecto no se publica por contener información
 > real de la empresa.
 
+## Notificación de alertas críticas
+
+Opcional y desactivada por defecto. El analizador funciona igual sin internet.
+
+```bash
+python3 analizador/analizador.py --notificar
+```
+
+Envía las alertas de severidad 9 al webhook de n8n, que descarta las ya
+notificadas, arma un solo correo en HTML y lo envía por Gmail. El registro de lo
+notificado se escribe **después** de que el correo sale: si el envío falla, la
+alerta no queda marcada y se reintenta en la siguiente corrida.
+
+La URL del webhook vive en `config/notificaciones.json`, que **no se versiona**:
+un webhook es un endpoint abierto. Se parte de `config/notificaciones.ejemplo.json`.
+
+Para repetir el envío en un ensayo, se borran las filas de la Data Table desde
+n8n y se vuelve a ejecutar. La bandera `--pruebas` usa la URL de test del
+webhook, que exige pulsar «Execute workflow» en n8n antes.
+
 ## Despliegue
 
-El tablero se despliega en **Vercel** (plan Hobby, gratuito, uso no comercial).
-`vercel.json` ya apunta al directorio `web`.
+El tablero está en <https://securitysolution-bay.vercel.app/>, desplegado en
+**Vercel** (plan Hobby, gratuito, uso no comercial). `vercel.json` ya apunta al
+directorio `web`, así que cada push a `main` lo actualiza solo.
 
 En producción con logs reales de Kenworth, este tablero se despliega
 **on-premise o en la nube privada de la empresa**: los registros de firewall no

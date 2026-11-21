@@ -1,8 +1,11 @@
 # Contexto para Claude Code
 
-Proyecto del equipo **E-8ZNU «security»** para el reto de Kenworth de la Montaña
-(EstudIA, Capa 2, Ciberseguridad básico). Monitoreo de eventos, clasificación de
-alertas y plan de hardening.
+**LOG-SECURITY**: proyecto del equipo **E-8ZNU «security»** para el reto de
+Kenworth de la Montaña (EstudIA, Capa 2, Ciberseguridad básico). Monitoreo de
+eventos, clasificación de alertas y plan de hardening.
+
+Tablero publicado: <https://securitysolution-bay.vercel.app/> (Vercel, se
+actualiza con cada push a `main`).
 
 El contexto completo y la historia de decisiones están en
 `Kenworth_Recursos_de_Prueba/CONTEXTO_PROYECTO.md`. **Ese archivo NO está en el
@@ -48,12 +51,21 @@ Este archivo resume lo que hay que tener presente al escribir código.
 ```
 Kenworth_Recursos_de_Prueba/  (CSV + JSON de entrada, intacto)
             |
-   analizador/analizador.py   (reglas + severidad)
+   analizador/analizador.py   (detección)
+   analizador/severidad.py    (activo, correlación CH01, severidad)
             |
      web/alertas.json         <-- EL CONTRATO
-       |          |
-  web/ (Vercel)   n8n (webhook) --> correo
+       |                    |
+  web/ (Vercel)      analizador/notificador.py
+                            |
+                     n8n webhook --> dedup en Data Table --> Gmail
 ```
+
+**Dos motores, una sola verdad.** Las reglas y la severidad existen en Python
+(`analizador/`) y en JavaScript (`web/js/motor.js`), porque el tablero permite
+cargar un archivo propio y recalcular en el navegador. Si tocas una regla en un
+lado, tócala en el otro: la vista Validación compara ambos motores en vivo y
+tiene que seguir dando cero diferencias.
 
 `web/alertas.json` es el contrato entre las tres piezas. Si cambia su forma, hay
 que actualizar el tablero. Contiene: `generado_en`, `origen_datos`, `parametros`,
@@ -112,6 +124,32 @@ calcular severidad.
 
 Dato útil: los 12 eventos `deny` de `203.0.113.77` hacia DB-LAB (E0309–E0320) **no
 los detecta** el analizador original. Es la mejora más visible del MVP.
+
+## Notificación (n8n)
+
+Flujo `LOG-SECURITY · Alertas críticas`, publicado. Webhook POST
+`/webhook/alertas-kenworth` → separar alertas → descartar las que ya están en la
+Data Table `Kenworth alertas notificadas` → si quedan nuevas, armar un solo
+correo en HTML → enviar por Gmail → registrar en la Data Table.
+
+El registro va **después** del envío a propósito: si el correo falla, la alerta
+no queda marcada y se reintenta. Nunca al revés.
+
+La URL del webhook está en `config/notificaciones.json`, ignorado por git.
+
+## Visualización
+
+Antes de tocar un gráfico, leer la guía `dataviz` si está disponible en la
+sesión. Lo que ya está decidido y validado:
+
+- **Una sola serie por gráfico**, en el tono azul `#3987e5`. Validado sobre la
+  superficie `#12161d`: banda de luminosidad, croma y contraste 4.98:1.
+- **Colores de estado** (`#d03b3b` crítico, `#fab219` advertencia, `#0ca30c`
+  correcto): son los reservados del sistema y **siempre van con icono y texto**.
+  Rojo y verde se confunden con daltonismo (ΔE 4.1 bajo deuteranopía), así que
+  el color nunca puede ser el único portador del significado.
+- Nada de gráficos de dos ejes, ni de tarta, ni de paletas arcoíris.
+- Todo valor legible como número, no solo como tamaño de barra.
 
 ## Estilo
 

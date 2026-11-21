@@ -20,8 +20,14 @@ Requiere Python 3.9 o superior. No instala paquetes. No usa internet.
 from pathlib import Path
 from datetime import datetime, timedelta
 from collections import defaultdict, deque
+import argparse
 import csv
 import json
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import severidad
+import notificador
 
 # ---------------------------------------------------------------------------
 # Rutas. El paquete del curso se deja INTACTO y se usa como unica fuente de
@@ -41,6 +47,7 @@ ENTRADA_CASOS = PAQUETE / '07_Validacion' / 'Casos_controlados.json'
 
 SALIDAS = RAIZ / 'salidas'
 WEB = RAIZ / 'web'
+CONFIG_NOTIFICACIONES = RAIZ / 'config' / 'notificaciones.json'
 
 DISPOSICION_INICIAL = 'Revisar contexto; no confirma incidente'
 
@@ -118,12 +125,14 @@ def detectar(eventos, cfg):
 
 # ---------------------------------------------------------------------------
 # PENDIENTE (MVP del equipo). Cada regla se agrega y se revalida por separado:
-#   5. Enriquecer cada alerta con el inventario: activo, zona y criticidad.
-#   6. Reconocer CH01 (cambios_autorizados.csv) para cerrar lo autorizado.
-#   7. Detectar "fallos seguidos de exito" como una sola alerta correlacionada.
-#   8. Detectar denegaciones repetidas desde Internet hacia un activo critico.
-#   9. Alertar por uso de R02, la excepcion que no registra eventos.
-#  10. Calcular severidad = criticidad_activo x peso_senal (escala 1-3 x 1-3).
+#   [hecho] Enriquecer cada alerta con el inventario: activo, zona y criticidad.
+#   [hecho] Reconocer CH01 (cambios_autorizados.csv) para cerrar lo autorizado.
+#   [hecho] Escalar los "fallos seguidos de exito".
+#   [hecho] Calcular severidad = criticidad_activo x peso_senal (1-3 x 1-3).
+#   Pendiente: detectar denegaciones repetidas desde Internet a un activo critico
+#              (E0309-E0320, los 12 deny desde 203.0.113.77 hacia DB-LAB).
+#   Pendiente: alertar por uso de R02, la excepcion que no registra eventos.
+#   Al agregar cada regla, revalidar contra 07_Validacion/Referencia_alertas.csv.
 # ---------------------------------------------------------------------------
 
 
@@ -144,7 +153,7 @@ def escribir_csv(ruta, filas, campos):
         escritor.writerows(filas)
 
 
-def run():
+def run(notificar=False, pruebas=False):
     if not ENTRADA_EVENTOS.exists():
         raise SystemExit(
             f'No se encontro el archivo de eventos en:\n  {ENTRADA_EVENTOS}\n'
@@ -153,7 +162,12 @@ def run():
 
     eventos = cargar_eventos(ENTRADA_EVENTOS)
     cfg = json.loads(ENTRADA_PARAMETROS.read_text(encoding='utf-8'))
+    inventario = cargar_csv(ENTRADA_INVENTARIO)
+    cambios = cargar_csv(ENTRADA_CAMBIOS)
+
     alertas = detectar(eventos, cfg)
+    enriquecidas = severidad.enriquecer(alertas, eventos, inventario, cambios, cfg)
+    criticas = severidad.criticas(enriquecidas)
 
     SALIDAS.mkdir(exist_ok=True)
     WEB.mkdir(exist_ok=True)
@@ -169,7 +183,8 @@ def run():
         'nota': 'Datos de prueba. La cantidad de alertas no equivale a incidentes.',
     }
 
-    # Salidas para revision manual y para las plantillas del curso.
+    # El CSV conserva EXACTAMENTE las 6 columnas de la referencia del curso:
+    # el enriquecimiento viaja en el JSON, no aqui, para no romper la validacion.
     escribir_csv(
         SALIDAS / 'alertas.csv',
         alertas,
@@ -186,14 +201,14 @@ def run():
         'generado_en': datetime.now().isoformat(timespec='seconds'),
         'origen_datos': 'Kenworth_Recursos_de_Prueba (datos de prueba del curso)',
         'parametros': cfg,
-        'inventario': cargar_csv(ENTRADA_INVENTARIO),
+        'inventario': inventario,
         'hallazgos': cargar_csv(ENTRADA_HALLAZGOS),
-        'cambios_autorizados': cargar_csv(ENTRADA_CAMBIOS),
+        'cambios_autorizados': cambios,
         'politicas': cargar_csv(ENTRADA_POLITICAS),
         'servidores': json.loads(ENTRADA_SERVIDORES.read_text(encoding='utf-8')),
         'casos_controlados': json.loads(ENTRADA_CASOS.read_text(encoding='utf-8')),
         'resumen': resumen,
-        'alertas': alertas,
+        'alertas': enriquecidas,
         # Eventos crudos para que el tablero pueda mostrar la EVIDENCIA detras de
         # cada alerta en un clic. La guia lo pide de forma explicita: otro equipo
         # debe poder llegar del alerta al evento que la origino.
@@ -207,8 +222,34 @@ def run():
     print(f'\nEscrito: {SALIDAS / "alertas.csv"}')
     print(f'Escrito: {SALIDAS / "resumen.json"}')
     print(f'Escrito: {WEB / "alertas.json"}')
+
+    print(f'\nAlertas criticas abiertas (severidad >= {severidad.SEVERIDAD_CRITICA}): {len(criticas)}')
+    for a in criticas:
+        print(f'  {a["alerta_id"]} · {a["evento_id"]} · {a["tipo"]} · '
+              f'{a["activo"]} · severidad {a["severidad"]}')
+
+    if notificar:
+        cfg_notif = notificador.cargar_config(CONFIG_NOTIFICACIONES)
+        if cfg_notif is None:
+            print('\n[notificador] desactivado. Copia config/notificaciones.ejemplo.json '
+                  'a config/notificaciones.json, pon la URL y marca "activo": true.')
+        else:
+            contexto = dict(resumen)
+            contexto['generado_en'] = contrato['generado_en']
+            contexto['dataset'] = 'Laboratorio Kenworth'
+            url = cfg_notif.get('webhook_url_pruebas') if pruebas else None
+            n, mensaje = notificador.notificar(criticas, cfg_notif, contexto, url=url)
+            print(f'\n[notificador] {mensaje}')
+
     return resumen
 
 
 if __name__ == '__main__':
-    run()
+    parser = argparse.ArgumentParser(
+        description='Analiza los eventos de prueba y genera alertas clasificadas.')
+    parser.add_argument('--notificar', action='store_true',
+                        help='envia las alertas criticas nuevas al webhook de n8n')
+    parser.add_argument('--pruebas', action='store_true',
+                        help='usa la URL de pruebas del webhook en vez de la de produccion')
+    args = parser.parse_args()
+    run(notificar=args.notificar, pruebas=args.pruebas)

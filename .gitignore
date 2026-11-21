@@ -15,9 +15,6 @@ config/notificaciones.json
 .env
 .env.local
 
-# Estado local del notificador (evita reenviar los mismos correos)
-salidas/.enviadas.json
-
 # Vercel
 .vercel/
 

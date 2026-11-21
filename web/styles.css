@@ -319,3 +319,60 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   .ficha-datos dd{margin-bottom:9px}
   .kpi-cifra{font-size:1.6rem}
 }
+
+/* ---------- Panorama (metricas) ---------- */
+.panel-hero{background:linear-gradient(135deg,var(--superficie),#141b26)}
+.hero{display:flex; align-items:center; gap:20px; flex-wrap:wrap}
+.hero-cifra{font-size:3.4rem; font-weight:680; line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums}
+.hero-texto{flex:1; min-width:240px}
+.hero-texto strong{font-size:1.05rem; display:block}
+.hero-texto .panel-sub{margin-top:5px}
+
+.kpis-linea{display:flex; flex-wrap:wrap; gap:26px; margin-top:20px; padding-top:18px; border-top:1px solid var(--borde)}
+.kpi-linea{display:flex; flex-direction:column; gap:1px}
+.kpi-linea-n{font-size:1.25rem; font-weight:650; font-variant-numeric:tabular-nums}
+.kpi-linea-t{font-size:.76rem; color:var(--texto-3)}
+.kpi-linea-aviso .kpi-linea-n{color:#fab219}
+
+.rejilla-2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+
+.grafico{width:100%; height:auto; display:block; overflow:visible}
+.grafico .rejilla{stroke:var(--borde); stroke-width:1}
+.grafico .eje{fill:var(--texto-3); font-size:10px; font-family:inherit}
+.grafico .eje-num{text-anchor:end}
+.grafico .col-zona{fill:transparent}
+.grafico .col:hover .col-zona{fill:rgba(255,255,255,.04)}
+.leyenda-pie{display:flex; align-items:center; gap:7px; margin:10px 0 0; color:var(--texto-3); font-size:.78rem}
+.punto{width:8px; height:8px; border-radius:50%; display:inline-block; flex:none}
+
+.barras{display:flex; flex-direction:column; gap:11px}
+.barra-fila{display:grid; grid-template-columns:minmax(120px,1.1fr) 2fr auto; gap:13px; align-items:center}
+.barra-nombre{display:flex; flex-direction:column; gap:2px; min-width:0}
+.barra-nombre strong{font-size:.85rem}
+.barra-detalle{font-size:.72rem; color:var(--texto-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.barra-pista{height:9px; background:var(--superficie-2); border-radius:5px; overflow:hidden}
+.barra-relleno{height:100%; border-radius:5px; min-width:3px; transition:width .25s ease}
+.barra-valor{font-size:.85rem; font-weight:650; font-variant-numeric:tabular-nums; text-align:right; min-width:62px; color:var(--texto)}
+.insignia{display:inline-block; align-self:flex-start; background:var(--aviso-bg); color:#ffc45c;
+  border:1px solid rgba(245,165,36,.4); border-radius:4px; padding:1px 6px; font-size:.66rem;
+  font-weight:650; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px}
+.icono-estado{font-size:.9rem; width:14px; display:inline-block}
+.barra-nombre .icono-estado + strong{display:inline}
+.barras .barra-nombre:has(.icono-estado){flex-direction:row; align-items:center; gap:8px}
+
+.tabla-alterna{margin-top:14px}
+.tabla-alterna summary{cursor:pointer; color:var(--texto-2); font-size:.8rem; padding:6px 0}
+.tabla-alterna summary:hover{color:var(--texto)}
+.tabla-alterna > div{margin-top:10px}
+
+.matriz th[scope=row]{text-align:left; font-weight:500; color:var(--texto-2); font-size:.82rem; text-transform:none; letter-spacing:0}
+.matriz thead th{text-transform:none; font-size:.78rem; letter-spacing:0; color:var(--texto); font-weight:650}
+.estado-celda{font-size:.82rem; font-weight:600; white-space:nowrap}
+
+@media (max-width:860px){
+  .rejilla-2{grid-template-columns:1fr}
+  .barra-fila{grid-template-columns:1fr auto; gap:5px 10px}
+  .barra-pista{grid-column:1 / -1; order:3}
+  .hero-cifra{font-size:2.6rem}
+  .kpis-linea{gap:18px}
+}

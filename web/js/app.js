@@ -1,6 +1,7 @@
 /* Arranque y navegacion entre vistas. */
 import { el } from './ui.js';
 import { analizar } from './motor.js';
+import * as metricas from './vistas/metricas.js';
 import * as dashboard from './vistas/dashboard.js';
 import * as correlacion from './vistas/correlacion.js';
 import * as hardening from './vistas/hardening.js';
@@ -9,6 +10,7 @@ import * as validacion from './vistas/validacion.js';
 import * as entregables from './vistas/entregables.js';
 
 const VISTAS = [
+  { id: 'metricas', nombre: 'Panorama', mod: metricas, icono: 'M3 3v18h18M7 16l3-6 4 3 3-7' },
   { id: 'dashboard', nombre: 'Monitor', mod: dashboard, icono: 'M3 3v18h18M7 16l4-6 4 3 5-8' },
   { id: 'correlacion', nombre: 'Correlación', mod: correlacion, icono: 'M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4m6 6h10a2 2 0 0 0 2-2v-4M8 12h8' },
   { id: 'hardening', nombre: 'Hardening', mod: hardening, icono: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z' },
@@ -17,7 +19,7 @@ const VISTAS = [
 ];
 
 let estado = null;
-let vistaActual = 'dashboard';
+let vistaActual = 'metricas';
 
 function pintarNav() {
   el('nav-vistas').innerHTML = VISTAS.map(v => `
@@ -37,7 +39,7 @@ function ir(id) {
   app.innerHTML = v.mod.render(estado);
   v.mod.montar(estado, recalcular);
   pintarNav();
-  app.scrollIntoView({ block: 'start', behavior: 'instant' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 /* Cambia el conjunto de eventos y vuelve a correr el motor completo.
@@ -99,7 +101,7 @@ fetch('alertas.json', { cache: 'no-store' })
     el('btn-pitch').addEventListener('click', modoPitch);
     el('modal-cerrar').addEventListener('click', () => el('modal').close());
 
-    ir('dashboard');
+    ir('metricas');
   })
   .catch(err => {
     if (location.protocol === 'file:') {
