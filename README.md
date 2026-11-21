@@ -145,6 +145,6 @@ deben salir de su perímetro, y la empresa exige acuerdo de confidencialidad.
 | Luis Enrique Ruiz Restrepo | Analista de configuración e integración |
 | Zara Zapata Mariaca | Verificador |
 | Maria Camila Garcia Castrillon | Relator |
-| Luis Alexander Ramirez Valencia | — |
-| Jhojan Steven Cano Florez | — |
-| Adyuer De Jesus Ojeda Badel | — |
+| Luis Alexander Ramirez Valencia | Analista de eventos |
+| Jhojan Steven Cano Florez | Responsable de activos |
+| Adyuer De Jesus Ojeda Badel | Responsable de activos |
