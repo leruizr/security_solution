@@ -2,6 +2,7 @@
 import { el } from './ui.js';
 import { analizar } from './motor.js';
 import * as metricas from './vistas/metricas.js';
+import * as soc from './vistas/soc.js';
 import * as dashboard from './vistas/dashboard.js';
 import * as correlacion from './vistas/correlacion.js';
 import * as hardening from './vistas/hardening.js';
@@ -11,6 +12,7 @@ import * as entregables from './vistas/entregables.js';
 
 const VISTAS = [
   { id: 'metricas', nombre: 'Panorama', mod: metricas, icono: 'M3 3v18h18M7 16l3-6 4 3 3-7' },
+  { id: 'soc', nombre: 'SOC & Tráfico', mod: soc, icono: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
   { id: 'dashboard', nombre: 'Monitor', mod: dashboard, icono: 'M3 3v18h18M7 16l4-6 4 3 5-8' },
   { id: 'correlacion', nombre: 'Correlación', mod: correlacion, icono: 'M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4m6 6h10a2 2 0 0 0 2-2v-4M8 12h8' },
   { id: 'hardening', nombre: 'Hardening', mod: hardening, icono: 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z' },
