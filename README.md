@@ -17,15 +17,42 @@ para cualquier plan de hardening.
 
 ## La solución propuesta
 
-Tres capas sobre una única fuente de verdad:
+**Kenworth CyberGuard · SOC-Lite**, en tres capas sobre una única fuente de verdad:
 
 1. **Motor de análisis** (`analizador/`) — normaliza los eventos y los correlaciona
    contra el inventario de activos, las políticas del firewall y los cambios
    autorizados. Clasifica cada alerta por severidad.
-2. **Tablero de clasificación** (`web/`) — muestra las alertas ordenadas por
-   severidad y permite llegar de la alerta a la evidencia cruda en un clic.
+2. **Tablero** (`web/`) — cinco vistas, sin dependencias externas:
+   - **Monitor** — KPIs, tabla de alertas y de eventos crudos, filtros en vivo, e
+     ingesta de logs propios por arrastrar y soltar.
+   - **Correlación** — cruza las alertas contra los cambios autorizados y muestra
+     por qué una se descarta y otra de la misma hora no.
+   - **Hardening** — matriz impacto × exposición con deslizadores en vivo y fichas
+     con validación y reversión.
+   - **Validación** — los 4 casos controlados y la comparación cruzada entre el
+     motor del navegador y el de Python.
+   - **Entregables** — Canvas, ficha de incidente y guion de pitch, generados a
+     partir de los datos cargados.
 3. **Notificación automática** (`n8n/`) — envía correo únicamente cuando aparece una
    alerta crítica, para no generar fatiga de alertas.
+
+### Severidad
+
+`severidad = criticidad del activo (1–3) × peso de la señal (1–3)`, la misma escala
+que la rúbrica usa para impacto × exposición. 9 es crítica, 6 alta, 3–4 media,
+1–2 baja. Una alerta cubierta por un cambio autorizado se descarta con
+justificación trazable, no se borra.
+
+### Decisiones técnicas
+
+- **Sin framework ni CDN.** JavaScript con módulos nativos y CSS propio. El tablero
+  funciona completo sin conexión, que es lo que importa el día de la sustentación.
+  No requiere Node ni instalar nada.
+- **El archivo importado nunca sale del equipo.** Se lee con `FileReader` en el
+  navegador. No hay subida ni servidor: con logs reales, los registros no deben
+  salir del perímetro.
+- **Dos motores, una verdad.** Las reglas están en Python y en JavaScript. La vista
+  de Validación comprueba en vivo que producen el mismo resultado.
 
 ## Cómo ejecutarlo
 
@@ -50,7 +77,11 @@ cd web && python3 -m http.server 8000
 ```
 
 Y abrir <http://localhost:8000>. Abrirlo con doble clic **no funciona**: el
-navegador bloquea la lectura de `alertas.json` bajo el protocolo `file://`.
+navegador bloquea la lectura de módulos y de `alertas.json` bajo el protocolo
+`file://`.
+
+> Si editas un archivo de `web/js/` y el navegador no refleja el cambio, es la
+> caché de módulos: recarga con **Cmd+Shift+R**.
 
 ## Verificación
 
@@ -68,6 +99,9 @@ Sin diferencias = la extracción del código no alteró la lógica de detección
 .
 ├── analizador/        Motor de detección en Python (sin dependencias)
 ├── web/               Tablero estático. Es lo que se despliega en Vercel
+│   ├── js/motor.js        Reglas de detección y severidad (espejo del de Python)
+│   ├── js/ingesta.js      Lectura de CSV / JSON / JSONL en el navegador
+│   └── js/vistas/         Una vista por módulo
 ├── salidas/           Resultados de cada corrida
 ├── docs/              Plantillas del curso que el equipo diligencia
 ├── config/            Configuración local. El archivo real no se versiona

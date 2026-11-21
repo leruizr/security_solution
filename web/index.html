@@ -3,73 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Monitoreo de eventos | Kenworth (datos de prueba)</title>
-<meta name="description" content="Tablero de clasificación de alertas de seguridad. Ejercicio académico con datos de prueba.">
+<title>Kenworth CyberGuard | SOC-Lite</title>
+<meta name="description" content="Tablero de monitoreo de eventos, correlación de alertas y plan de hardening. Ejercicio académico con datos de prueba.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="cabecera">
-  <div class="cabecera-texto">
-    <h1>Monitoreo de eventos y alertas</h1>
-    <p class="sub">Kenworth de la Montaña · Equipo E-8ZNU «security» · EstudIA Capa 2</p>
+
+<nav class="nav">
+  <div class="nav-marca">
+    <span class="escudo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+      </svg>
+    </span>
+    <div>
+      <strong>Kenworth CyberGuard</strong>
+      <span class="nav-sub">SOC-Lite · Monitoreo y hardening</span>
+    </div>
   </div>
-  <span class="badge-prueba" title="Los datos no representan la infraestructura real de Kenworth">
-    DATOS DE PRUEBA
-  </span>
-</header>
 
-<main>
-  <section id="estado" class="aviso oculto"></section>
+  <div class="nav-vistas" role="tablist" id="nav-vistas"></div>
 
-  <section class="tarjetas" id="tarjetas"></section>
+  <div class="nav-acciones">
+    <span class="badge-prueba" title="Los datos no representan la infraestructura real de la empresa">DATOS DE PRUEBA</span>
+    <button id="btn-pitch" class="btn btn-fantasma" title="Amplía la interfaz para proyectar">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20v14H2z"/><path d="m8 21 4-4 4 4"/></svg>
+      Modo presentación
+    </button>
+  </div>
+</nav>
 
-  <section class="panel">
-    <div class="panel-cabecera">
-      <h2>Alertas</h2>
-      <div class="filtros">
-        <label for="f-tipo" class="sr-only">Filtrar por tipo</label>
-        <select id="f-tipo"><option value="">Todos los tipos</option></select>
-        <label for="f-texto" class="sr-only">Buscar</label>
-        <input id="f-texto" type="search" placeholder="Buscar evento, motivo…" autocomplete="off">
-      </div>
-    </div>
-    <div class="tabla-envoltura">
-      <table id="tabla">
-        <thead>
-          <tr>
-            <th>Alerta</th><th>Fecha y hora</th><th>Tipo</th><th>Motivo</th><th>Evidencia</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <p class="nota" id="nota-conteo"></p>
-  </section>
+<div id="cargando" class="cargando">
+  <div class="spinner" aria-hidden="true"></div>
+  <p>Cargando conjunto de datos…</p>
+</div>
 
-  <section class="panel">
-    <h2>Límites de este tablero</h2>
-    <ul class="limites">
-      <li>Una alerta es una <strong>señal para revisión</strong>, no un incidente confirmado.</li>
-      <li>No prueba intrusión, atribución de un atacante ni extracción de información.</li>
-      <li>Las actualizaciones pendientes no permiten inferir vulnerabilidades concretas (CVE).</li>
-      <li>Un solo día de datos y sin User-ID: no se puede asociar una IP a una persona.</li>
-    </ul>
-  </section>
-</main>
+<main id="app" class="oculto"></main>
 
-<footer>
-  <p>Generado por <code>analizador/analizador.py</code> · <span id="generado">—</span></p>
-  <p class="nota">Ejercicio académico. Ningún dato corresponde a la infraestructura real de Kenworth.</p>
+<footer class="pie">
+  <p>Generado por <code>analizador/analizador.py</code> · <span id="pie-generado">—</span></p>
+  <p>Ejercicio académico EstudIA · Equipo E-8ZNU «security». Ningún dato corresponde a infraestructura real.</p>
 </footer>
 
-<dialog id="detalle">
-  <div class="detalle-cabecera">
-    <h3 id="detalle-titulo">Evidencia</h3>
-    <button id="cerrar" aria-label="Cerrar">✕</button>
+<dialog id="modal">
+  <div class="modal-cab">
+    <h3 id="modal-titulo">Detalle</h3>
+    <button id="modal-cerrar" class="btn-icono" aria-label="Cerrar">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
   </div>
-  <div id="detalle-cuerpo"></div>
+  <div id="modal-cuerpo" class="modal-cuerpo"></div>
 </dialog>
 
-<script src="app.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>

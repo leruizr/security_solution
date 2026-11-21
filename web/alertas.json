@@ -1,5 +1,5 @@
 {
-  "generado_en": "2026-11-21T09:00:29",
+  "generado_en": "2026-11-21T09:28:23",
   "origen_datos": "Kenworth_Recursos_de_Prueba (datos de prueba del curso)",
   "parametros": {
     "fallos_umbral": 5,
@@ -9,6 +9,288 @@
     "volumen_revision_bytes": 50000000,
     "nota": "Reglas didácticas; no indican un ataque por sí solas."
   },
+  "inventario": [
+    {
+      "activo_id": "A01",
+      "nombre_prueba": "FW-LAB",
+      "ip_prueba": "10.60.0.1",
+      "zona": "Gestión",
+      "criticidad": "Alta",
+      "responsable_rol": "Redes",
+      "proposito": "Filtrar tráfico entre zonas"
+    },
+    {
+      "activo_id": "A02",
+      "nombre_prueba": "WEB-LAB",
+      "ip_prueba": "10.60.10.10",
+      "zona": "DMZ",
+      "criticidad": "Alta",
+      "responsable_rol": "Aplicaciones",
+      "proposito": "Portal web de prueba"
+    },
+    {
+      "activo_id": "A03",
+      "nombre_prueba": "APP-LAB",
+      "ip_prueba": "10.60.20.10",
+      "zona": "Servidores",
+      "criticidad": "Alta",
+      "responsable_rol": "Aplicaciones",
+      "proposito": "Servicio operativo de prueba"
+    },
+    {
+      "activo_id": "A04",
+      "nombre_prueba": "DB-LAB",
+      "ip_prueba": "10.60.20.20",
+      "zona": "Servidores",
+      "criticidad": "Alta",
+      "responsable_rol": "Datos",
+      "proposito": "Base operativa de prueba"
+    },
+    {
+      "activo_id": "A05",
+      "nombre_prueba": "BACKUP-LAB",
+      "ip_prueba": "10.60.30.10",
+      "zona": "Respaldo",
+      "criticidad": "Alta",
+      "responsable_rol": "Infraestructura",
+      "proposito": "Copias de seguridad"
+    },
+    {
+      "activo_id": "A06",
+      "nombre_prueba": "ADMIN-LAB",
+      "ip_prueba": "10.60.0.20",
+      "zona": "Gestión",
+      "criticidad": "Alta",
+      "responsable_rol": "Infraestructura",
+      "proposito": "Administración autorizada"
+    },
+    {
+      "activo_id": "A07",
+      "nombre_prueba": "PC-LAB-01",
+      "ip_prueba": "10.60.40.21",
+      "zona": "Usuarios",
+      "criticidad": "Media",
+      "responsable_rol": "Soporte",
+      "proposito": "Puesto de trabajo"
+    },
+    {
+      "activo_id": "A08",
+      "nombre_prueba": "PC-LAB-02",
+      "ip_prueba": "10.60.40.22",
+      "zona": "Usuarios",
+      "criticidad": "Media",
+      "responsable_rol": "Soporte",
+      "proposito": "Puesto de trabajo"
+    },
+    {
+      "activo_id": "A09",
+      "nombre_prueba": "LOG-LAB",
+      "ip_prueba": "10.60.0.30",
+      "zona": "Gestión",
+      "criticidad": "Alta",
+      "responsable_rol": "Seguridad",
+      "proposito": "Concentrar registros"
+    },
+    {
+      "activo_id": "A10",
+      "nombre_prueba": "TEST-LAB",
+      "ip_prueba": "10.60.50.10",
+      "zona": "Pruebas",
+      "criticidad": "Baja",
+      "responsable_rol": "Laboratorio",
+      "proposito": "Pruebas controladas"
+    }
+  ],
+  "hallazgos": [
+    {
+      "hallazgo_id": "H01",
+      "activo": "DB-LAB",
+      "categoria": "Acceso amplio",
+      "evidencia": "R02 permite Usuarios -> DB-LAB any sin registro",
+      "impacto_prueba": "Alto",
+      "confianza": "Requiere revisión",
+      "estado": "Pendiente"
+    },
+    {
+      "hallazgo_id": "H02",
+      "activo": "DB-LAB",
+      "categoria": "Administración",
+      "evidencia": "Configuración indica MFA desactivado y cuentas compartidas",
+      "impacto_prueba": "Alto",
+      "confianza": "Requiere revisión",
+      "estado": "Pendiente"
+    },
+    {
+      "hallazgo_id": "H03",
+      "activo": "DB-LAB",
+      "categoria": "Trazabilidad",
+      "evidencia": "Configuración indica registro centralizado desactivado",
+      "impacto_prueba": "Alto",
+      "confianza": "Requiere revisión",
+      "estado": "Pendiente"
+    },
+    {
+      "hallazgo_id": "H04",
+      "activo": "DB-LAB",
+      "categoria": "Actualizaciones",
+      "evidencia": "Se reportan 3 actualizaciones pendientes, sin versiones ni CVE",
+      "impacto_prueba": "Por precisar",
+      "confianza": "Requiere revisión",
+      "estado": "Pendiente"
+    },
+    {
+      "hallazgo_id": "H05",
+      "activo": "BACKUP-LAB",
+      "categoria": "Recuperación",
+      "evidencia": "Última prueba de restauración no registrada",
+      "impacto_prueba": "Alto",
+      "confianza": "Requiere revisión",
+      "estado": "Pendiente"
+    },
+    {
+      "hallazgo_id": "H06",
+      "activo": "APP-LAB",
+      "categoria": "Actualizaciones",
+      "evidencia": "Se reporta 1 actualización pendiente sin detalle",
+      "impacto_prueba": "Por precisar",
+      "confianza": "Requiere revisión",
+      "estado": "Pendiente"
+    },
+    {
+      "hallazgo_id": "H07",
+      "activo": "BACKUP-LAB",
+      "categoria": "Administración",
+      "evidencia": "MFA desactivado",
+      "impacto_prueba": "Medio",
+      "confianza": "Requiere revisión",
+      "estado": "Pendiente"
+    }
+  ],
+  "cambios_autorizados": [
+    {
+      "cambio_id": "CH01",
+      "activo": "BACKUP-LAB",
+      "inicio": "2026-11-20T02:00:00",
+      "fin": "2026-11-20T02:30:00",
+      "origen_autorizado": "10.60.0.20",
+      "usuario_prueba": "admin_prueba",
+      "motivo": "Revisión programada de copia",
+      "limite": "No autoriza envío externo de datos"
+    }
+  ],
+  "politicas": [
+    {
+      "regla_id": "R01",
+      "origen": "Internet",
+      "destino": "WEB-LAB",
+      "servicio": "TCP/443",
+      "accion": "allow",
+      "registro": "si",
+      "observacion": "Acceso web previsto"
+    },
+    {
+      "regla_id": "R02",
+      "origen": "Usuarios",
+      "destino": "DB-LAB",
+      "servicio": "any",
+      "accion": "allow",
+      "registro": "no",
+      "observacion": "Excepción de prueba sin fecha de revisión"
+    },
+    {
+      "regla_id": "R03",
+      "origen": "ADMIN-LAB",
+      "destino": "Servidores",
+      "servicio": "TCP/22,TCP/3389",
+      "accion": "allow",
+      "registro": "si",
+      "observacion": "Administración de prueba"
+    },
+    {
+      "regla_id": "R04",
+      "origen": "any",
+      "destino": "any",
+      "servicio": "any",
+      "accion": "deny",
+      "registro": "si",
+      "observacion": "Cierre por defecto"
+    }
+  ],
+  "servidores": {
+    "DB-LAB": {
+      "mfa_administracion": false,
+      "actualizaciones_pendientes": 3,
+      "registro_centralizado": false,
+      "cuentas_compartidas": true,
+      "respaldo_ultima_prueba": "No registrada",
+      "administracion_restringida": false
+    },
+    "APP-LAB": {
+      "mfa_administracion": true,
+      "actualizaciones_pendientes": 1,
+      "registro_centralizado": true,
+      "cuentas_compartidas": false,
+      "respaldo_ultima_prueba": "2026-11-10",
+      "administracion_restringida": true
+    },
+    "BACKUP-LAB": {
+      "mfa_administracion": false,
+      "actualizaciones_pendientes": 0,
+      "registro_centralizado": true,
+      "cuentas_compartidas": false,
+      "respaldo_ultima_prueba": "No registrada",
+      "administracion_restringida": true
+    }
+  },
+  "casos_controlados": [
+    {
+      "caso": "Cuatro fallos",
+      "minutos": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "alertas_esperadas": 0,
+      "alertas_observadas": 0
+    },
+    {
+      "caso": "Cinco fallos",
+      "minutos": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "alertas_esperadas": 1,
+      "alertas_observadas": 1
+    },
+    {
+      "caso": "Fuera de ventana",
+      "minutos": [
+        0,
+        3,
+        6,
+        9,
+        12
+      ],
+      "alertas_esperadas": 0,
+      "alertas_observadas": 0
+    },
+    {
+      "caso": "Frontera diez minutos",
+      "minutos": [
+        0,
+        2,
+        4,
+        6,
+        10
+      ],
+      "alertas_esperadas": 1,
+      "alertas_observadas": 1
+    }
+  ],
   "resumen": {
     "eventos": 324,
     "alertas": 6,

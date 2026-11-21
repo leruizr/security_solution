@@ -32,6 +32,12 @@ PAQUETE = RAIZ / 'Kenworth_Recursos_de_Prueba'
 
 ENTRADA_EVENTOS = PAQUETE / '02_Datos' / 'eventos_normalizados.csv'
 ENTRADA_PARAMETROS = PAQUETE / '03_Configuraciones' / 'parametros_alertas.json'
+ENTRADA_INVENTARIO = PAQUETE / '02_Datos' / 'inventario_activos.csv'
+ENTRADA_HALLAZGOS = PAQUETE / '02_Datos' / 'hallazgos_iniciales.csv'
+ENTRADA_CAMBIOS = PAQUETE / '02_Datos' / 'cambios_autorizados.csv'
+ENTRADA_POLITICAS = PAQUETE / '03_Configuraciones' / 'politicas_firewall_prueba.csv'
+ENTRADA_SERVIDORES = PAQUETE / '03_Configuraciones' / 'servidores_prueba.json'
+ENTRADA_CASOS = PAQUETE / '07_Validacion' / 'Casos_controlados.json'
 
 SALIDAS = RAIZ / 'salidas'
 WEB = RAIZ / 'web'
@@ -121,10 +127,14 @@ def detectar(eventos, cfg):
 # ---------------------------------------------------------------------------
 
 
-def cargar_eventos(ruta):
-    """Lee el CSV de eventos. El paquete usa UTF-8 con BOM."""
+def cargar_csv(ruta):
+    """Lee un CSV del paquete. Todos vienen en UTF-8 con BOM."""
     with ruta.open(encoding='utf-8-sig', newline='') as f:
         return list(csv.DictReader(f))
+
+
+def cargar_eventos(ruta):
+    return cargar_csv(ruta)
 
 
 def escribir_csv(ruta, filas, campos):
@@ -170,10 +180,18 @@ def run():
     )
 
     # Contrato de datos que consume el tablero web (y mas adelante n8n).
+    # Todo sale de los archivos del curso: el tablero NUNCA tiene datos escritos
+    # a mano. Si un numero cambia en el CSV, cambia solo en el tablero.
     contrato = {
         'generado_en': datetime.now().isoformat(timespec='seconds'),
         'origen_datos': 'Kenworth_Recursos_de_Prueba (datos de prueba del curso)',
         'parametros': cfg,
+        'inventario': cargar_csv(ENTRADA_INVENTARIO),
+        'hallazgos': cargar_csv(ENTRADA_HALLAZGOS),
+        'cambios_autorizados': cargar_csv(ENTRADA_CAMBIOS),
+        'politicas': cargar_csv(ENTRADA_POLITICAS),
+        'servidores': json.loads(ENTRADA_SERVIDORES.read_text(encoding='utf-8')),
+        'casos_controlados': json.loads(ENTRADA_CASOS.read_text(encoding='utf-8')),
         'resumen': resumen,
         'alertas': alertas,
         # Eventos crudos para que el tablero pueda mostrar la EVIDENCIA detras de
