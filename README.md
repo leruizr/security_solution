@@ -78,7 +78,7 @@ sigue produciendo exactamente el mismo resultado.
 
 | # | Regla del equipo | Qué encuentra en los datos de prueba |
 |---|---|---|
-| 5 | Denegaciones repetidas desde fuera del inventario hacia un activo crítico | Los 12 intentos bloqueados de `203.0.113.77` contra DB-LAB, en los puertos 22, 5432 y 3389 |
+| 5 | Escaneo de puertos (vertical o distribuido) hacia un activo crítico | Los 12 intentos bloqueados de `203.0.113.77` contra DB-LAB, en los puertos 22, 5432 y 3389 |
 | 6 | Uso efectivo de una excepción del firewall que no deja registro | Los 8 eventos que pasaron por R02 hacia DB-LAB sin quedar en ninguna auditoría |
 
 La regla 6 emite **una sola alerta por regla**, no una por evento: ocho avisos

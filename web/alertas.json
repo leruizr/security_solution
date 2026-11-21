@@ -1,5 +1,5 @@
 {
-  "generado_en": "2026-11-21T10:46:45",
+  "generado_en": "2026-11-21T11:04:25",
   "origen_datos": "Kenworth_Recursos_de_Prueba (datos de prueba del curso)",
   "parametros": {
     "fallos_umbral": 5,
@@ -302,7 +302,7 @@
       "Inconsistencia de registro": 1,
       "Fallos repetidos": 1,
       "Excepción sin registro": 1,
-      "Denegaciones repetidas": 1
+      "Escaneo de puertos": 1
     },
     "nota": "Datos de prueba. La cantidad de alertas no equivale a incidentes."
   },
@@ -464,8 +464,8 @@
     {
       "evento_id": "E0313",
       "fecha_hora": "2026-11-20T10:04:00",
-      "tipo": "Denegaciones repetidas",
-      "motivo": "5 intentos bloqueados en ventana móvil desde 203.0.113.77, que no está en el inventario, hacia DB-LAB. Puertos probados: 22, 5432. El firewall los negó: no hubo acceso.",
+      "tipo": "Escaneo de puertos",
+      "motivo": "5 intentos bloqueados en ventana móvil desde 203.0.113.77, que no está en el inventario, hacia DB-LAB. Puertos probados: 22, 5432 (2 puertos distintos). El firewall los negó: no hubo acceso.",
       "disposicion": "Revisar contexto; no confirma incidente",
       "origen_regla": "ampliada",
       "alerta_id": "AL008",

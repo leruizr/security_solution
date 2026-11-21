@@ -18,6 +18,8 @@ export const PESO_SENAL = {
   'Fuera de horario': 1,
   'Volumen para revisión': 3,
   'Inconsistencia de registro': 2,
+  'Escaneo de puertos': 2,
+  'Escaneo distribuido de puertos': 2,
   'Denegaciones repetidas': 2,
   'Excepción sin registro': 2,
 };
@@ -142,12 +144,16 @@ export function detectarAmpliadas(eventos, cfg, inventario, politicas, desde) {
     return a.evento_id < b.evento_id ? -1 : a.evento_id > b.evento_id ? 1 : 0;
   });
 
-  /* Regla 5: denegaciones repetidas desde fuera del inventario hacia un activo
-     critico. El firewall las bloqueo, asi que no hubo acceso; pero el patron
-     (muchos intentos, varios puertos, un solo origen) merece revision. */
+  /* Regla 5: Escaneo de puertos (sondeo vertical de una sola IP o distribuido
+     desde múltiples IPs hacia un activo crítico). El firewall las bloqueó
+     (acción deny), pero el patrón de sondeo a puertos sensibles de activos
+     críticos merece alerta de reconocimiento. */
   const ventanas = new Map();
   const puertos = new Map();
   const disparadas = new Map();
+
+  const ventanasDist = new Map();
+  const disparadasDist = new Map();
 
   for (const e of ordenados) {
     if (e.accion !== 'deny') continue;
@@ -155,6 +161,8 @@ export function detectarAmpliadas(eventos, cfg, inventario, politicas, desde) {
     if (!criticos.has(e.destino_ip)) continue;
 
     const dt = aFecha(e.fecha_hora);
+
+    // 5a. Escaneo vertical / sondeo desde una misma IP externa
     const clave = e.origen_ip + '|' + e.destino_ip;
     if (!ventanas.has(clave)) { ventanas.set(clave, []); puertos.set(clave, new Set()); }
     const cola = ventanas.get(clave);
@@ -166,11 +174,35 @@ export function detectarAmpliadas(eventos, cfg, inventario, politicas, desde) {
     const fueraDeCooldown = !previa || dt - previa > cfg.ventana_minutos * MIN;
     if (cola.length >= cfg.fallos_umbral && fueraDeCooldown) {
       const lista = [...puertos.get(clave)].sort((a, b) => a - b).join(', ');
-      agregar(e, 'Denegaciones repetidas',
+      const detallePuertos = puertos.get(clave).size > 1
+        ? `${lista} (${puertos.get(clave).size} puertos distintos)`
+        : lista;
+      agregar(e, 'Escaneo de puertos',
         `${cola.length} intentos bloqueados en ventana móvil desde ${e.origen_ip}, ` +
         `que no está en el inventario, hacia ${nombre(e.destino_ip)}. ` +
-        `Puertos probados: ${lista}. El firewall los negó: no hubo acceso.`);
+        `Puertos probados: ${detallePuertos}. El firewall los negó: no hubo acceso.`);
       disparadas.set(clave, dt);
+    }
+
+    // 5b. Escaneo distribuido: múltiples IPs externas hacia el mismo destino
+    const dest = e.destino_ip;
+    if (!ventanasDist.has(dest)) ventanasDist.set(dest, []);
+    const colaD = ventanasDist.get(dest);
+    colaD.push({ dt, origen: e.origen_ip, puerto: String(e.puerto_destino) });
+    while (colaD.length && dt - colaD[0].dt > cfg.ventana_minutos * MIN) colaD.shift();
+
+    const ipsEnVentana = new Set(colaD.map(item => item.origen));
+    const previaDist = disparadasDist.get(dest);
+    const fueraCooldownDist = !previaDist || dt - previaDist > cfg.ventana_minutos * MIN;
+    if (colaD.length >= cfg.fallos_umbral && ipsEnVentana.size >= 2 && fueraCooldownDist) {
+      const puertosD = [...new Set(colaD.map(item => item.puerto))].sort((a, b) => a - b).join(', ');
+      const listaIps = [...ipsEnVentana].sort().join(', ');
+      agregar(e, 'Escaneo distribuido de puertos',
+        `${colaD.length} intentos bloqueados en ventana móvil hacia ${nombre(dest)} ` +
+        `provenientes de ${ipsEnVentana.size} IPs externas distintas (${listaIps}). ` +
+        `Puertos probados: ${puertosD}. Patrón de escaneo distribuido. ` +
+        `El firewall los negó: no hubo acceso.`);
+      disparadasDist.set(dest, dt);
     }
   }
 

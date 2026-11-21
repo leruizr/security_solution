@@ -16,6 +16,8 @@ PESO_SENAL = {
     'Fuera de horario': 1,
     'Volumen para revisión': 3,
     'Inconsistencia de registro': 2,
+    'Escaneo de puertos': 2,
+    'Escaneo distribuido de puertos': 2,
     'Denegaciones repetidas': 2,
     'Excepción sin registro': 2,
 }

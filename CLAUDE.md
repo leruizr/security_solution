@@ -105,7 +105,7 @@ Criticidad: Alta = 3, Media = 2, Baja = 1 (de `02_Datos/inventario_activos.csv`)
 |---|---|
 | Fallos repetidos **seguidos de éxito** | 3 |
 | Volumen alto a destino externo **+ regla inconsistente** | 3 |
-| Denegaciones repetidas desde Internet a activo crítico | 2 |
+| Escaneo de puertos / Denegaciones desde Internet a activo crítico | 2 |
 | Uso de R02 (excepción que no registra) | 2 |
 | Fuera de horario | 1 |
 
@@ -117,8 +117,8 @@ CH01 cubre BACKUP-LAB el 2026-11-20 de 02:00 a 02:30 desde 10.60.0.20, y
 
 ## Las reglas, y por qué están separadas
 
-`detectar()` tiene las 4 reglas del curso. `detectar_ampliadas()` tiene las 2 del
-equipo: denegaciones repetidas desde fuera del inventario hacia un activo
+`detectar()` tiene las 4 reglas del curso. `detectar_ampliadas()` tiene las del
+equipo: escaneo de puertos (vertical y distribuido) desde fuera del inventario hacia un activo
 crítico, y uso de una excepción que la política declara sin registro.
 
 **Están en funciones distintas a propósito.** Las base se numeran primero

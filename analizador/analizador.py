@@ -154,12 +154,17 @@ def detectar_ampliadas(eventos, cfg, inventario, politicas, desde=0):
 
     ordenados = sorted(eventos, key=lambda x: (x['fecha_hora'], x['evento_id']))
 
-    # Regla 5: denegaciones repetidas desde fuera del inventario hacia un activo
-    # critico. El firewall las bloqueo, asi que no hubo acceso; pero el patron
-    # (muchos intentos, varios puertos, un solo origen) merece revision.
+    # Regla 5: Escaneo de puertos (sondeo vertical de una sola IP o distribuido
+    # desde múltiples IPs hacia un activo crítico). El firewall las bloqueó
+    # (acción deny), pero el patrón de sondeo a puertos sensibles de activos
+    # críticos merece alerta de reconocimiento.
     ventanas = defaultdict(deque)
     puertos = defaultdict(set)
     disparadas = {}
+
+    ventanas_dist = defaultdict(deque)
+    disparadas_dist = {}
+
     for e in ordenados:
         if e['accion'] != 'deny':
             continue
@@ -169,6 +174,8 @@ def detectar_ampliadas(eventos, cfg, inventario, politicas, desde=0):
             continue
 
         dt = datetime.fromisoformat(e['fecha_hora'])
+
+        # 5a. Escaneo vertical / sondeo desde una misma IP externa
         clave = (e['origen_ip'], e['destino_ip'])
         cola = ventanas[clave]
         cola.append(dt)
@@ -183,15 +190,47 @@ def detectar_ampliadas(eventos, cfg, inventario, politicas, desde=0):
         )
         if len(cola) >= cfg['fallos_umbral'] and fuera_de_cooldown:
             lista = ', '.join(sorted(puertos[clave], key=int))
+            detalle_puertos = (
+                f'{lista} ({len(puertos[clave])} puertos distintos)'
+                if len(puertos[clave]) > 1
+                else lista
+            )
             alertar(
                 e,
-                'Denegaciones repetidas',
+                'Escaneo de puertos',
                 f'{len(cola)} intentos bloqueados en ventana móvil desde '
                 f'{e["origen_ip"]}, que no está en el inventario, hacia '
-                f'{nombre(e["destino_ip"])}. Puertos probados: {lista}. '
+                f'{nombre(e["destino_ip"])}. Puertos probados: {detalle_puertos}. '
                 f'El firewall los negó: no hubo acceso.',
             )
             disparadas[clave] = dt
+
+        # 5b. Escaneo distribuido: múltiples IPs externas hacia el mismo destino
+        dest = e['destino_ip']
+        cola_d = ventanas_dist[dest]
+        cola_d.append((dt, e['origen_ip'], str(e['puerto_destino'])))
+        while cola_d and dt - cola_d[0][0] > timedelta(minutes=cfg['ventana_minutos']):
+            cola_d.popleft()
+
+        ips_en_ventana = {item[1] for item in cola_d}
+        previa_dist = disparadas_dist.get(dest)
+        fuera_cooldown_dist = (
+            previa_dist is None
+            or dt - previa_dist > timedelta(minutes=cfg['ventana_minutos'])
+        )
+        if len(cola_d) >= cfg['fallos_umbral'] and len(ips_en_ventana) >= 2 and fuera_cooldown_dist:
+            puertos_d = sorted({item[2] for item in cola_d}, key=int)
+            lista_p = ', '.join(puertos_d)
+            lista_ips = ', '.join(sorted(ips_en_ventana))
+            alertar(
+                e,
+                'Escaneo distribuido de puertos',
+                f'{len(cola_d)} intentos bloqueados en ventana móvil hacia '
+                f'{nombre(dest)} provenientes de {len(ips_en_ventana)} IPs externas distintas '
+                f'({lista_ips}). Puertos probados: {lista_p}. '
+                f'Patrón de escaneo distribuido. El firewall los negó: no hubo acceso.',
+            )
+            disparadas_dist[dest] = dt
 
     # Regla 6: uso efectivo de una excepcion que la politica declara sin
     # registro. Una sola alerta por regla, no una por evento: ocho avisos del

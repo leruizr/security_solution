@@ -9,7 +9,7 @@
     "Inconsistencia de registro": 1,
     "Fallos repetidos": 1,
     "Excepción sin registro": 1,
-    "Denegaciones repetidas": 1
+    "Escaneo de puertos": 1
   },
   "nota": "Datos de prueba. La cantidad de alertas no equivale a incidentes."
 }
